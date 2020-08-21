@@ -1,0 +1,64 @@
+`dormilones.py`
+¿Por qué los segundos que se imprimen que pasaron son 2, 0 y 1 (aprox.) respectivamente?
+
+La respuesta tiene que ver que en el primer ejempo (secuencial) al ejecutar el programa se toma el horario de la pc, luegoo se pone a dormir (1 seg) hasta que no pasa ese segundo, no puede seguir ejecutando. Después sigue con el otro sleep y pasa un segundo más y finaliza. Toma el tiempo de la pc nuevamente y le resta la anterior medición.
+Hay un sólo hilo de ejecución.
+En el caso de los threads, se ejecuta el programa y cuando llega al primer thread lo manda a dormir y luego también al segundo porque son hilos indepndientes (no hay que esperar para que terminen. El hilo principal entonces, continúa y finaliza. Las mediciones en este caso son prácticamente iguales, por eso da 0.
+Hay 3 threads (el principal, y los otros dos que se ponen a dormir)  
+En el último caso en que se utiliza el join(), se lanza el programa (se toma el tiempo) y al llegar al primer hilo y lo lanza, va al otro y lo lanza. El hilo principal, por la función join(), queda esperando que terminen los hilos que estan ejecutando al mismo momento el sleep. Cuando terminan sigue el principal y finaliza. En este caso, se contempla (de manera significativa) sólo el segundo que dura el sleep().
+También hay tres hilos en este.
+Las ventajas de usar join, es que me permite esperar, si es que se necesita, que finalice un thread. Y el inconveniente que produce eso mismo, es que se detiene todo lo que sigue hasta que no termine.
+
+# Muchos threads
+
+## Parte 2
+Ahora corré el script: ¿por qué tarda lo que tarda?
+El programa genera 10 hilos con la función dormir(1.5) es decir que cada hilo se crea, se lanza y se agrega a la lista. Cuando sale de loop entra en otro que espera que termine cad hilo, es decir que pase 1 segundo y medio. Pasado eso, finaliza los 10 hilos más el principal. El tiempo es 1.5 y monedas porque 1,5 es lo que tarda el sleep y las monedas son lo que tarda en generar los hilos y finalizar (tiempo despreciable)
+
+# Intercalación en concurrencia
+
+**Dos reglas importantes** para `contadorConcurrente.py`:
+
+Mirando el código de `contadorConcurrente.py`, pero sin ejecutarlo:
+- Al ejecutar la función `cuenta()`, ¿cuántas veces se ejecuta el `for` que tiene adentro, y qué hace cada iteración del `for`?
+El for se ejecuta 500000 veces (1000000/2), y en cada iteración incrementa en 1 a counter.
+ ¿Es verdad que cada thread lanza una ejecución de la función `cuenta()`?
+Si dentro del otro for se crea el thread (2) y se lanza cada uno de ellos. Ahí se agregan a la lista y luego se ejecutan con cuenta()
+- ¿Es verdad que se está esperando a que termine cada thread?
+Si, en el último for espera con el join() a que termine cada hilo de la lista
+
+- ¿Cúal te parece que es el valor que se imprime de `counter`?
+más de 500000 y menos de un millón => 500000 seguro del segundo hilo más los que le falta al primer hilo completrar. Explico, el primer hilo pone a conter = 0, luego lo empieza a incrementar, en ese proceso (concurrentemente) se lanza el segundo hilo que vuelve a inicializar a counter, entonces supongamos que el primer hilo ya incrementó 150000 veces a counter (todavía faltan 350000) y en ese momento se lanza el segundo, ese inicializa counter (que es una variable global) y a partir de ahí la incrementan los dos threads, el primero con lo que e faltaba (350000) y el segundo con los 500000.
+
+Ahora corré `contadorConcurrente.py`:
+- Correlo varias veces, ¿qué observás que pasa?
+- ¿Por qué está pasando eso que observás?
+Los motivos son los que pensaba (o al menos coinciden los valores)
+
+# ¿Secuencial clásico, concurrente o paralelo?
+
+Para cada una de las siguiente situaciones, decidí si es secuencial clásico, concurrente o paralelo. Intentá justificar señalando las ideas esenciales de cada caso.
+
+- Cuál persona de un total de 50 corre más rápido una maratón.
+    - opción 1) Cada persona corre secuencialmente en la pista, y medimos cada tiempo.
+    - opción 2) Todas las personas corren en la misma pista, y la que llega primero listo.
+		- Preguntas: ¿hay algún recurso compartido? ¿genera problemas?
+    - opción 3) Cada persona corre en una pista distinta, todas al mismo tiempo.
+		- Pregunta: ¿hay un aumento de recursos respecto al anterior?
+    - Pregunta: ¿pros y contras de cada opción?
+
+En una maratón todos corren en la misma pista y al mismo momento, por eso la opción 1 queda afuera. La 2 es correcta, el recurso compartido es la pista y no hay ningún problema. El último caso no es común pero podría darse, en cuyo caso no habría recursos compartidos, pero si más recursos (pistas).
+
+
+- Competencia de triples en basquet: quién mete más en 10 intentos.
+    - opción 1) Cada persona secuencialmente realiza 10 intentos, y anotamos la cantidad de triples.
+    - opción 2) Todas las personas tiran los 10 intentos al mismo tiempo.
+		- Preguntas: ¿hay algún recurso compartido? ¿genera problemas?
+    - opción 3) Cada persona tira en un aro distinto, todas al mismo tiempo.
+    - Pregunta: ¿pros y contras de cada opción?
+
+La opción 1 está bien, aunque puede ser una ventaaja conocer cómo les fue a los anteriores.
+La 2, es imposible, no se pueden tirar 10 tiros al mismo tiempo. (si fuera un pulpo podrían ser 8)
+La 3 en concepto, es la más justa porque en paralelo, los participantes juntos van tirando cada tiro. Aumenta el recurso (cantidad de aros y pelotas)
+
+
